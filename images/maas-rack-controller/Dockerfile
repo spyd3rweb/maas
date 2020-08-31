@@ -14,9 +14,11 @@ ARG NO_PROXY
 ARG http_proxy
 ARG https_proxy
 ARG no_proxy
+ARG MAAS_VERSION=2.3.5-6511-gf466fdb-0ubuntu1
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV container docker
+#ENV MAAS_VERSION 2.3.5-6511-gf466fdb-0ubuntu1
 
 # everything else below is to setup maas into the systemd initialized
 # container based on ubuntu 16.04
@@ -42,8 +44,6 @@ RUN systemctl set-default multi-user.target
 # install syslog and enable it
 RUN apt-get install -y rsyslog
 RUN systemctl enable rsyslog.service
-
-ENV MAAS_VERSION 2.3.5-6511-gf466fdb-0ubuntu1
 
 # install maas
 RUN rsyslogd; apt-get install -y maas-cli=$MAAS_VERSION maas-rack-controller=$MAAS_VERSION

@@ -14,9 +14,22 @@ ARG NO_PROXY
 ARG http_proxy
 ARG https_proxy
 ARG no_proxy
+ARG MAAS_VERSION=2.3.5-6511-gf466fdb-0ubuntu1
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV container docker
+#ENV MAAS_VERSION 2.3.5-6511-gf466fdb-0ubuntu1
+
+# everything else below is to setup maas into the systemd initialized
+# container based on ubuntu 16.04
+RUN apt-get -qq update && \
+    apt-get -y install \
+    sudo \
+    software-properties-common \
+    libvirt-bin \
+    systemd \
+    patch \
+    jq
 
 # Don't start any optional services except for the few we need.
 RUN find /etc/systemd/system \
@@ -28,35 +41,21 @@ RUN find /etc/systemd/system \
          -exec rm \{} \;
 RUN systemctl set-default multi-user.target
 
-# everything else below is to setup maas into the systemd initialized
-# container based on ubuntu 16.04
-RUN apt-get -qq update && \
-    apt-get -y install sudo \
-                       software-properties-common \
-                       jq
-
-# TODO(alanmeadows)
-# we need systemd 231 per https://github.com/systemd/systemd/commit/a1350640ba605cf5876b25abfee886488a33e50b
-#RUN add-apt-repository ppa:pitti/systemd -y && add-apt-repository ppa:maas/stable -y && apt-get update
-RUN apt-get install -y systemd
-
 # install syslog and enable it
 RUN apt-get install -y rsyslog
 RUN systemctl enable rsyslog.service
 
-ENV MAAS_VERSION 2.3.5-6511-gf466fdb-0ubuntu1
 
 # install maas
 RUN rsyslogd; apt-get install -y maas-cli=$MAAS_VERSION \
     maas-dns=$MAAS_VERSION \
     maas-region-api=$MAAS_VERSION \
     avahi-utils \
-    dbconfig-pgsql=2.0.4ubuntu1 \
+    dbconfig-pgsql \
     iputils-ping \
     postgresql \
     tcpdump \
     python3-pip
-
 
 RUN apt-get download maas-region-controller=$MAAS_VERSION && \
 # remove postinstall script in order to avoid db_sync
@@ -65,7 +64,7 @@ RUN apt-get download maas-region-controller=$MAAS_VERSION && \
     rm maas-region-controller/DEBIAN/postinst && \
     dpkg-deb --build maas-region-controller && \
     dpkg -i maas-region-controller.deb && \
-    pg_dropcluster --stop 9.5 main
+    pg_dropcluster --stop 10 main
 
 # we don't want/need avahi-daemon running in the container
 RUN rm -f /etc/init.d/avahi-daemon

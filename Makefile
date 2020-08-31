@@ -30,11 +30,12 @@ PUSH_IMAGE        ?= false
 LABEL             ?= org.airshipit.build=community
 COMMIT            ?= $(shell git rev-parse HEAD)
 IMAGE_NAME        := maas-rack-controller maas-region-controller sstream-cache
+MAAS_VERSION      := "2.4.2-7034-g2f5deb8b8-0ubuntu1"
 BUILD_DIR         := $(shell mktemp -d)
 HELM              := $(BUILD_DIR)/helm
 SSTREAM_IMAGE     := "https://images.maas.io/ephemeral-v3/daily/"
-SSTREAM_RELEASE   := "xenial"
-UBUNTU_BASE_IMAGE ?= ubuntu:16.04
+SSTREAM_RELEASE   := "bionic"
+UBUNTU_BASE_IMAGE ?= ubuntu:18.04
 
 .PHONY: images
 #Build all images in the list
@@ -84,6 +85,7 @@ ifeq ($(USE_PROXY), true)
 		--build-arg NO_PROXY=$(NO_PROXY) \
 		--build-arg SSTREAM_IMAGE=$(SSTREAM_IMAGE) \
 		--build-arg SSTREAM_RELEASE=$(SSTREAM_RELEASE) \
+                --build-arg MAAS_VERSION=$(MAAS_VERSION) \
 		$(IMAGE_DIR)
 else
 	docker build -t $(IMAGE) --label $(LABEL) --network=host \
@@ -94,6 +96,7 @@ else
 		--build-arg FROM=$(UBUNTU_BASE_IMAGE) \
 		--build-arg SSTREAM_IMAGE=$(SSTREAM_IMAGE) \
 		--build-arg SSTREAM_RELEASE=$(SSTREAM_RELEASE) \
+                --build-arg MAAS_VERSION=$(MAAS_VERSION) \
 		$(IMAGE_DIR)
 endif
 ifeq ($(PUSH_IMAGE), true)
