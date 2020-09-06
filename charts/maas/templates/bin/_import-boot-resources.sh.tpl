@@ -175,7 +175,9 @@ function configure_boot_sources {
     maas ${ADMIN_USERNAME} boot-source update 1 url=http://localhost:8888/maas/images/ephemeral-v3/daily/
   fi
 
+{{- if empty .Values.conf.maas.version_2dot4_or_higher }}
   check_then_set http_boot ${MAAS_HTTP_BOOT}
+{{- end }}
 
   selected_releases="$(maas ${ADMIN_USERNAME} boot-source-selections read 1 | jq -r '.[] | .release')"
 
